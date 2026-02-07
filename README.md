@@ -1,66 +1,24 @@
-## Foundry
+# SovereignAgent (SOV) - Autonomous A2A Coordination
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This project demonstrates a fully autonomous **Agent-to-Agent (A2A)** economic loop on the **Monad Testnet** using **ERC-4337 Account Abstraction**.
 
-Foundry consists of:
+## 🚀 Vision
+A protocol where agents hire other agents to perform on-chain tasks without human intervention, utilizing sovereign identities for secure execution.
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## 🏗 Architecture
 
-## Documentation
+* **Identity**: MetaMask Smart Accounts Kit for sovereign UserOperations.
+* **Coordination**: Economic signaling via MON transfers detected by a Viem listener.
+* **UX**: Real-time audit logs and control via a Telegram Bot interface.
 
-https://book.getfoundry.sh/
+## 🛠 Setup & Run
+1. **Configure Environment**: 
+   Add `TELEGRAM_BOT_TOKEN`, `CLIENT_PRIVATE_KEY`, and `WORKER_ADDRESS` to your `.env`.
+2. **Launch Bot**:
+   `node bot.js`
+3. **Execute Flow**:
+   Use `/monitor` to start the listener, then `/hire` to trigger the autonomous payment and execution.
 
-## Usage
-
-### Build
-
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+## 🔗 Verification
+* **Network**: Monad Testnet (10143)
+* **Smart Account**: ${process.env.WORKER_ADDRESS || '0x164e7A...'}
