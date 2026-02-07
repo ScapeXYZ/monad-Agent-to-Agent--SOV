@@ -5,6 +5,6 @@
   "dependencies": {
     "viem": "latest",
     "node-telegram-bot-api": "latest",
-    "@metamask/smart-accounts-kit": "latest"
+    "dotenv": "latest"
   }
 }
