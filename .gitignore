@@ -1,0 +1,4 @@
+node_modules/
+pvkey.txt
+.env
+*.log
