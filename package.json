@@ -1,6 +1,10 @@
 {
+  "name": "monad-a2a-sov",
+  "version": "1.0.0",
+  "type": "module",
   "dependencies": {
-    "@metamask/smart-accounts-kit": "^0.4.0-beta.1",
-    "viem": "^2.45.1"
+    "viem": "latest",
+    "node-telegram-bot-api": "latest",
+    "@metamask/smart-accounts-kit": "latest"
   }
 }
