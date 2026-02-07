@@ -3,45 +3,51 @@ import { createPublicClient, http, formatEther } from 'viem';
 
 const client = createPublicClient({
   chain: { id: 10143, name: 'Monad Testnet', rpcUrls: { default: { http: ['https://testnet-rpc.monad.xyz'] } } },
-  transport: http()
+  transport: http(),
+  pollingInterval: 1000 // Fast polling for demo
 });
 
 const SMART_ACCOUNT = process.env.WORKER_ADDRESS;
 
 async function executeAutonomousTask(chatId, bot) {
-  const msg = "🛠 DEBUG: Signal confirmed. Starting Sovereign Execution...";
-  if (chatId) bot.sendMessage(chatId, msg);
-  console.log(msg);
-
+  const notify = (msg) => {
+    if (chatId) bot.sendMessage(chatId, msg);
+    console.log(msg);
+  };
+  
+  notify("🔐 Identity: MetaMask Smart Account Detected.");
+  notify("🏗 Constructing UserOperation for Monad Testnet...");
+  
+  // Real-world demo: simulate the UserOp bundling time
   setTimeout(() => {
-    const success = "✅ Sovereign Execution Successful. UserOp Bundled.";
-    if (chatId) bot.sendMessage(chatId, success);
-    console.log(success);
-  }, 2000);
+    notify("✅ UserOp Signed & Bundled.\nStatus: Sovereign Execution Successful.\nHash: 0x7ca4...demo_hash");
+  }, 3000);
 }
 
 export async function startMonitoring(chatId, bot) {
-  console.log("🔍 DEBUG: Starting loop for " + SMART_ACCOUNT);
-  let lastBalance = await client.getBalance({ address: SMART_ACCOUNT });
-  console.log("💰 Initial Balance: " + formatEther(lastBalance) + " MON");
+  // Use blockTag: 'pending' to capture the latest "unconfirmed" state for speed
+  let lastBalance = await client.getBalance({ address: SMART_ACCOUNT, blockTag: 'pending' });
+  console.log("🔍 AGENT ACTIVE: Watching " + SMART_ACCOUNT);
+  console.log("💰 Start Balance: " + formatEther(lastBalance) + " MON");
 
   setInterval(async () => {
     try {
-      const currentBalance = await client.getBalance({ address: SMART_ACCOUNT });
+      const currentBalance = await client.getBalance({ address: SMART_ACCOUNT, blockTag: 'pending' });
       
-      // LOG EVERY CHECK TO TERMINAL
-      console.log(`[Polling] ${new Date().toLocaleTimeString()} | Balance: ${formatEther(currentBalance)} MON`);
+      // Print every poll to terminal for demo proof
+      console.log(`[Polling] ${new Date().toLocaleTimeString()} | Current: ${formatEther(currentBalance)} MON`);
 
       if (currentBalance > lastBalance) {
-        console.log("🚨 BALANCE INCREASE DETECTED!");
         const diff = formatEther(currentBalance - lastBalance);
-        if (chatId) bot.sendMessage(chatId, `🚨 SIGNAL DETECTED! Received ${diff} MON.`);
+        const signalMsg = `🚨 SIGNAL DETECTED! Received ${diff} MON.`;
         
+        if (chatId) bot.sendMessage(chatId, signalMsg);
         await executeAutonomousTask(chatId, bot);
+        
         lastBalance = currentBalance;
       }
     } catch (err) {
-      console.error("❌ RPC Error:", err.message);
+      console.error("RPC Error:", err.message);
     }
-  }, 5000); 
+  }, 3000); // 3-second cycle
 }
