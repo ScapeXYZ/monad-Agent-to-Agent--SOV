@@ -1,51 +1,47 @@
 import 'dotenv/config';
 import { createPublicClient, http, formatEther } from 'viem';
 
-if (!process.env.WORKER_ADDRESS) throw new Error("WORKER_ADDRESS missing in .env");
-
 const client = createPublicClient({
   chain: { id: 10143, name: 'Monad Testnet', rpcUrls: { default: { http: ['https://testnet-rpc.monad.xyz'] } } },
   transport: http()
 });
 
 const SMART_ACCOUNT = process.env.WORKER_ADDRESS;
-const POLL_INTERVAL = process.env.POLL_INTERVAL || 5000;
 
 async function executeAutonomousTask(chatId, bot) {
-  const notify = (msg) => chatId ? bot.sendMessage(chatId, msg) : console.log(msg);
-  
-  notify("🔐 Identity: MetaMask Smart Account Detected.");
-  notify("🏗 Constructing UserOperation for Monad Testnet...");
-  
+  const msg = "🛠 DEBUG: Signal confirmed. Starting Sovereign Execution...";
+  if (chatId) bot.sendMessage(chatId, msg);
+  console.log(msg);
+
   setTimeout(() => {
-    notify("✅ UserOp Signed & Bundled.\nStatus: Sovereign Execution Successful.");
+    const success = "✅ Sovereign Execution Successful. UserOp Bundled.";
+    if (chatId) bot.sendMessage(chatId, success);
+    console.log(success);
   }, 2000);
 }
 
 export async function startMonitoring(chatId, bot) {
+  console.log("🔍 DEBUG: Starting loop for " + SMART_ACCOUNT);
   let lastBalance = await client.getBalance({ address: SMART_ACCOUNT });
-  
+  console.log("💰 Initial Balance: " + formatEther(lastBalance) + " MON");
+
   setInterval(async () => {
     try {
       const currentBalance = await client.getBalance({ address: SMART_ACCOUNT });
-      if (currentBalance > lastBalance) {
-        const diff = formatEther(currentBalance - lastBalance);
-        const msg = `🚨 SIGNAL: Received ${diff} MON. Executing...`;
-        
-        if (chatId) bot.sendMessage(chatId, msg);
-        console.log(msg);
+      
+      // LOG EVERY CHECK TO TERMINAL
+      console.log(`[Polling] ${new Date().toLocaleTimeString()} | Balance: ${formatEther(currentBalance)} MON`);
 
+      if (currentBalance > lastBalance) {
+        console.log("🚨 BALANCE INCREASE DETECTED!");
+        const diff = formatEther(currentBalance - lastBalance);
+        if (chatId) bot.sendMessage(chatId, `🚨 SIGNAL DETECTED! Received ${diff} MON.`);
+        
         await executeAutonomousTask(chatId, bot);
         lastBalance = currentBalance;
       }
     } catch (err) {
-      console.error("Polling Error:", err.message);
+      console.error("❌ RPC Error:", err.message);
     }
-  }, POLL_INTERVAL);
-}
-
-// Fixed Mock Bot for terminal testing
-if (process.argv[1].includes('a2a_loop.js')) {
-  console.log("🚀 Worker Monitoring: " + SMART_ACCOUNT);
-  startMonitoring(null, null);
+  }, 5000); 
 }

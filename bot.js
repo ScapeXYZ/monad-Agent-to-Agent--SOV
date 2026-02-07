@@ -23,6 +23,7 @@ const client = createWalletClient({
 
 const WORKER_ADDRESS = process.env.WORKER_ADDRESS;
 
+// 3. Commands
 bot.onText(/\/monitor/, (msg) => {
   bot.sendMessage(msg.chat.id, "👷 Worker Agent: Online. Monitoring signals...");
   startMonitoring(msg.chat.id, bot);
@@ -36,7 +37,7 @@ bot.onText(/\/hire/, async (msg) => {
     const hash = await client.sendTransaction({
       to: WORKER_ADDRESS,
       value: parseEther('0.0001'),
-      kzg: null // Gas safety for Monad
+      gas: 21000n  // Standard ETH transfer gas
     });
     bot.sendMessage(chatId, "✅ Agent B: Payment Sent!\nHash: " + hash);
   } catch (error) {
@@ -45,4 +46,33 @@ bot.onText(/\/hire/, async (msg) => {
   }
 });
 
-console.log("🚀 Bot is running with full validation!");
+bot.onText(/\/status/, async (msg) => {
+  try {
+    const balance = await client.getBalance({ address: WORKER_ADDRESS });
+    bot.sendMessage(msg.chat.id, `📊 Worker Status:\n👷 Address: ${WORKER_ADDRESS}\n💰 Balance: ${(Number(balance)/1e18).toFixed(4)} MON`);
+  } catch (error) {
+    bot.sendMessage(msg.chat.id, "❌ Error checking status: " + error.message);
+  }
+});
+
+bot.onText(/\/stop/, async (msg) => {
+  bot.sendMessage(msg.chat.id, "🛑 Stopping bot...");
+  bot.stopPolling();
+  process.exit(0);
+});
+
+// 4. Graceful Shutdown
+process.on('SIGINT', () => {
+  console.log('\n🛑 Shutting down gracefully...');
+  bot.stopPolling();
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  console.log('\n🛑 Received SIGTERM...');
+  bot.stopPolling();
+  process.exit(0);
+});
+
+console.log("🚀 A2A Telegram Bot is running!");
+console.log("Commands: /monitor, /hire, /status, /stop");
