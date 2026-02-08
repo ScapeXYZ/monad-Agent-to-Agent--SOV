@@ -1,40 +1,95 @@
-# SovereignAgent (SOV) - Autonomous A2A Coordination
+# A2A SovereignAgent - Telegram Bot
 
-This project demonstrates a fully autonomous **Agent-to-Agent (A2A)** economic loop on the **Monad Testnet** using **ERC-4337 Account Abstraction**.
+Agent-to-Agent communication demo using Telegram for coordination and Monad Testnet for payments.
 
-## 🚀 Vision
-A protocol where agents hire other agents to perform on-chain tasks without human intervention, utilizing sovereign identities for secure execution.
+## Quick Start
 
-## 🏗 Architecture
+```bash
+cd ~/mev-bot
+cp .env.example .env
+nano .env  # Add TELEGRAM_BOT_TOKEN and CLIENT_PRIVATE_KEY
+./start.sh
+```
 
-* **Identity**: MetaMask Smart Accounts Kit for sovereign UserOperations.
-* **Coordination**: Economic signaling via MON transfers detected by a Viem listener.
-* **UX**: Real-time audit logs and control via a Telegram Bot interface.
+## Commands
 
-## 🛠 Setup & Run
-1. **Configure Environment**: 
-   Add `TELEGRAM_BOT_TOKEN`, `CLIENT_PRIVATE_KEY`, and `WORKER_ADDRESS` to your `.env`.
-2. **Launch Bot**:
-   `node bot.js`
-3. **Execute Flow**:
-   Use `/monitor` to start the listener, then `/hire` to trigger the autonomous payment and execution.
+| Command | Description |
+|---------|-------------|
+| `/monitor worker` | Start monitoring for payment signals |
+| `/hire` | Send payment to trigger A2A signal |
+| `/status` | Check worker balance and status |
+| `/stop` | Stop bot |
 
-## 🔗 Verification
-* **Network**: Monad Testnet (10143)
-* **Smart Account**: ${process.env.WORKER_ADDRESS || '0x164e7A...'}
+## Architecture
 
+```
+Telegram User
+      ↓
+/hire command
+      ↓
+Telegram Bot (bot.js)
+      ↓
+sendTransaction() → Monad Testnet
+      ↓
+Smart Account (0x164e7A9...)
+      ↓
+A2A Monitor (a2a_loop.js)
+      ↓
+Signal Detected! → Telegram Notification
+```
 
+## Security Features
 
-## 🏆 Bounty Milestone: Account Abstraction Proof
-The following output confirms the successful generation of a **User Operation** using the MetaMask Smart Accounts Kit on Monad Testnet.
+- ✅ **Rate Limiting**: Max 5 hires/minute per user
+- ✅ **Chat Whitelist**: Only authorized users can hire
+- ✅ **Input Validation**: All env vars validated at startup
+- ✅ **Graceful Shutdown**: SIGINT/SIGTERM handlers
 
-### User Operation Details
-* **Hybrid Smart Account:** `0x164e7A98fa7Bd34679522c470bF68D66C5b00C66`
-* **EntryPoint Address:** `0x0000000071727De22E5E9d8BAf0edAc6f37da032`
-* **UserOp Hash:** `0x7ca4f402e62360843317c879a4be207bcd9c4838496c511b75717b6f8f0141a7`
+## Configuration
 
-### A2A Handshake Verification
-This UserOp was triggered autonomously by the **Worker Agent** upon detecting an on-chain signal (payment) from the **Client Agent**. This demonstrates a complete autonomous economic loop:
-1. **Signal**: Client Agent sends 0.0001 MON.
-2. **Detection**: Worker Agent identifies balance change via `a2a_loop.js`.
-3. **Execution**: Worker Agent generates and signs a UserOp to execute the task.
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `TELEGRAM_BOT_TOKEN` | Yes | - | Bot token from @BotFather |
+| `CLIENT_PRIVATE_KEY` | Yes | - | Wallet private key (0x prefix) |
+| `WORKER_ADDRESS` | No | SOV SA | Smart Account to monitor |
+| `CHAIN_ID` | No | 10143 | Monad Testnet |
+| `HIRE_AMOUNT` | No | 0.0001 | Payment per /hire |
+| `POLL_INTERVAL` | No | 5000 | Monitoring poll rate (ms) |
+| `AUTHORIZED_CHAT_IDS` | No | - | Comma-separated allowed users |
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `bot.js` | Main Telegram bot |
+| `a2a_loop.js` | Monitoring with rate limiting |
+| `ecosystem.config.js` | PM2 deployment |
+| `start.sh` | Startup script |
+| `DEPLOYMENT.md` | Production guide |
+
+## Deployment
+
+```bash
+# Start with PM2
+pm2 start ecosystem.config.js
+pm2 save
+pm2 startup
+
+# View logs
+pm2 logs a2a-telegram-bot
+
+# Restart
+pm2 restart a2a-telegram-bot
+```
+
+## Limitations (Known)
+
+- **Mock UserOp**: Currently simulates ERC-4337 (polling-based)
+- **Polling vs WebSocket**: Monad testnet doesn't support event subscriptions yet
+- **Private Key**: Stored in env (use MPC/HSM for production)
+
+## Next Steps
+
+1. Implement real ERC-4337 with @metamask/smart-accounts-kit
+2. Add WebSocket support when available on Monad
+3. Use MPC wallet or HSM for key security
